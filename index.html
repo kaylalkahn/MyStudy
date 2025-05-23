@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MyStudy</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f0f4ff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    background-color: #004aad;
+    color: white;
+    width: 100%;
+    padding: 16px 0;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    user-select: none;
+  }
+  /* Tabs styling */
+  .tabs {
+    margin-top: 16px;
+    display: flex;
+    gap: 10px;
+  }
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    background: #004aad;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    user-select: none;
+  }
+  .tab.active {
+    background: #002f6c;
+    font-weight: bold;
+  }
+  .tab-content {
+    background: white;
+    max-width: 720px;
+    width: 90%;
+    border-radius: 0 12px 12px 12px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-top: 0;
+    min-height: 400px;
+  }
+
+  /* === Tab 1 Tasks calendar styles (reuse your styles) === */
+  .month-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .month-nav button {
+    background: #004aad;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  .month-nav button:hover {
+    background: #002f6c;
+  }
+  .month-name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    user-select: none;
+  }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    user-select: none;
+  }
+  .day-name {
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 0;
+    color: #004aad;
+    border-bottom: 2px solid #004aad;
+  }
+  .day-cell {
+    background: #f9fbff;
+    border-radius: 8px;
+    min-height: 80px;
+    padding: 6px 6px 2px;
+    box-sizing: border-box;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .day-cell:hover {
+    background: #e2ebff;
+  }
+  .day-number {
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #003366;
+  }
+  .task-badge {
+    background: #004aad;
+    color: white;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    border-radius: 10px;
+    margin: 2px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  /* Plus Button */
+  .add-task-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #004aad;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border: none;
+    color: white;
+    font-size: 36px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  .add-task-btn:hover {
+    background: #002f6c;
+  }
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .modal {
+    background: white;
+    border-radius: 10px;
+    padding: 20px 30px;
+    width: 320px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    user-select: auto;
+  }
+  .modal h3 {
+    margin-top: 0;
+    color: #004aad;
+    text-align: center;
+  }
+  .modal label {
+    display: block;
+    margin-top: 12px;
+    font-weight: 600;
+    color: #003366;
+  }
+  .modal input, .modal select {
+    width: 100%;
+    padding: 8px 6px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 1rem;
+  }
+  .modal-buttons {
+    margin-top: 20px;
+    text-align: center;
+  }
+  .modal-buttons button {
+    background: #004aad;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    margin: 0 8px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  .modal-buttons button:hover {
+    background: #002f6c;
+  }
+
+  /* === Tab 2 Restrictions weekly calendar === */
+  .week-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    gap: 4px;
+    user-select: none;
+  }
+  .time-label {
+    background: #004aad;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 6px;
+  }
+  .day-label {
+    background: #004aad;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 6px;
+  }
+  .slot {
+    background: #e2ebff;
+    border-radius: 6px;
+    height: 36px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .slot:hover {
+    background: #c1d4ff;
+  }
+  .slot.no-study {
+    background: #ff4c4c;
+  }
+
+  /* === Tab 3 Schedule === */
+  .schedule-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .schedule-item {
+    background: #dbeeff;
+    margin: 8px 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #003366;
+  }
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.schedule-table th, .schedule-table td {
+    border: 1px solid #004aad;
+    padding: 10px;
+    text-align: center;
+}
+
+.schedule-table th {
+    background: #004aad;
+    color: white;
+    font-weight: bold;
+}
+
+.schedule-task {
+    background: #004aad;
+    color: white;
+    padding: 4px;
+    border-radius: 5px;
+    margin: 4px 0;
+    display: block;
+}
+.draggable {
+  cursor: grab;
+}
+.dragging {
+  opacity: 0.5;
+}
+.drop-target {
+  background-color: #c1d4ff !important;
+  outline: 2px dashed #004aad;
+}
+  
+  #regenerateScheduleBtn, #editScheduleBtn {
+    background: #004aad;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    margin-top: 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #regenerateScheduleBtn:hover, #editScheduleBtn:hover {
+    background: #002f6c;
+  }
+
+  #taskPalette {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .delete-task-btn {
+    background: none;
+    border: none;
+    color: red;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+
+</style>
+</head>
+<body>
+
+<header>MyStudy</header>
+
+<!-- Tabs -->
+<div class="tabs" role="tablist" aria-label="Main Tabs">
+  <div class="tab active" role="tab" aria-selected="true" tabindex="0" id="tab-tasks" aria-controls="panel-tasks">Tasks</div>
+  <div class="tab" role="tab" aria-selected="false" tabindex="-1" id="tab-restrictions" aria-controls="panel-restrictions">Restrictions</div>
+  <div class="tab" role="tab" aria-selected="false" tabindex="-1" id="tab-schedule" aria-controls="panel-schedule">Schedule</div>
+</div>
+
+<!-- Tab panels -->
+<div class="tab-content" id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks">
+  <!-- Existing calendar and add task button -->
+  <div class="month-nav">
+    <button id="prevMonthBtn" aria-label="Previous Month">&lt;</button>
+    <div class="month-name" id="monthName"></div>
+    <button id="nextMonthBtn" aria-label="Next Month">&gt;</button>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+  <button class="add-task-btn" id="addTaskBtn" aria-label="Add Task">+</button>
+</div>
+
+<div class="tab-content" id="panel-restrictions" role="tabpanel" aria-labelledby="tab-restrictions" hidden>
+  <p>Select times where you <strong>cannot</strong> study (red slots).</p>
+  <div class="week-grid" id="weekGrid">
+    <!-- Will be generated by JS -->
+  </div>
+</div>
+
+<div class="tab-content" id="panel-schedule" role="tabpanel" aria-labelledby="tab-schedule" hidden>
+    <h3>Recommend Study Schedule</h3>
+    <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>
+              Sunday<br /><small class="date-label" id="date-Sun"></small>
+            </th>
+            <th>
+              Monday<br /><small class="date-label" id="date-Mon"></small>
+            </th>
+            <th>
+              Tuesday<br /><small class="date-label" id="date-Tue"></small>
+            </th>
+            <th>
+              Wednesday<br /><small class="date-label" id="date-Wed"></small>
+            </th>
+            <th>
+              Thursday<br /><small class="date-label" id="date-Thu"></small>
+            </th>
+            <th>
+              Friday<br /><small class="date-label" id="date-Fri"></small>
+            </th>
+            <th>
+              Saturday<br /><small class="date-label" id="date-Sat"></small>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody id="scheduleBody"></tbody>
+    </table>
+  <button id="regenerateScheduleBtn">Regenerate Schedule</button>
+</div>
+
+
+
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">Add Study Task</h3>
+    <form id="taskForm">
+      <label for="taskName">Task Name</label>
+      <input type="text" id="taskName" required placeholder="e.g. Math Homework" />
+      <label for="dueDate">Due Date</label>
+      <input type="date" id="dueDate" required min="" />
+      <label for="dedicatedTime">Time Dedicated (in hours)</label>
+      <input type="number" id="dedicatedTime" required min="1" placeholder="e.g. 5" />
+
+      <div class="modal-buttons">
+        <button type="submit">Add</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let tasks = []; // Global tasks array
+  let noStudySlots = new Set();
+
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.tab-content');
+
+  // ========== TAB NAVIGATION ==========
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+        t.setAttribute('tabindex', '-1');
+      });
+      panels.forEach(p => p.hidden = true);
+
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      tab.setAttribute('tabindex', '0');
+      const panel = document.getElementById(tab.getAttribute('aria-controls'));
+      panel.hidden = false;
+
+      if (tab.id === 'tab-schedule') {
+        updateScheduleWeekDates();
+        generateSchedule();
+      }
+    });
+  });
+
+  // ========== TASK FORM ==========
+  const modalOverlay = document.getElementById('modalOverlay');
+  const taskForm = document.getElementById('taskForm');
+  const dueDateInput = document.getElementById('dueDate');
+
+  function setMinDueDate() {
+    const today = new Date().toISOString().split('T')[0];
+    dueDateInput.setAttribute('min', today);
+  }
+
+  function showModal() {
+    modalOverlay.style.display = 'flex';
+    taskForm.reset();
+    setMinDueDate();
+    document.getElementById('taskName').focus();
+  }
+
+  function hideModal() {
+    modalOverlay.style.display = 'none';
+  }
+
+  document.getElementById('addTaskBtn').addEventListener('click', showModal);
+  document.getElementById('cancelBtn').addEventListener('click', hideModal);
+
+taskForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('taskName').value.trim();
+    const dueDate = document.getElementById('dueDate').value;
+    const dedicatedTime = parseInt(document.getElementById('dedicatedTime').value);
+    if (name && dueDate && dedicatedTime > 0) {
+      tasks.push({ name, dueDate, dedicatedTime }); // Ensure tasks array is correctly storing tasks
+        hideModal();
+        renderCalendar();
+        renderRestrictionsGrid(); // Update restrictions grid
+        generateSchedule(); // Trigger schedule update after adding a task
+    }
+});
+
+
+  // ========== CALENDAR ==========
+  const calendarGrid = document.getElementById('calendarGrid');
+  const monthName = document.getElementById('monthName');
+  const prevMonthBtn = document.getElementById('prevMonthBtn');
+  const nextMonthBtn = document.getElementById('nextMonthBtn');
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  let currentDate = new Date();
+
+  function renderCalendar() {
+    calendarGrid.innerHTML = '';
+    for (let dayName of dayNames) {
+      const dayNameCell = document.createElement('div');
+      dayNameCell.className = 'day-name';
+      dayNameCell.textContent = dayName;
+      calendarGrid.appendChild(dayNameCell);
+    }
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    monthName.textContent = `${monthNames[month]} ${year}`;
+    let blankDays = firstDay.getDay();
+
+    for (let i = 0; i < blankDays; i++) {
+      const blankCell = document.createElement('div');
+      blankCell.className = 'day-cell';
+      calendarGrid.appendChild(blankCell);
+    }
+
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const dayCell = document.createElement('div');
+      dayCell.className = 'day-cell';
+      const dayNum = document.createElement('div');
+      dayNum.className = 'day-number';
+      dayNum.textContent = day;
+      dayCell.appendChild(dayNum);
+
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const tasksForDay = tasks.filter(t => t.dueDate === dateStr);
+
+      for (let t of tasksForDay) {
+        const badge = document.createElement('div');
+        badge.className = 'task-badge';
+        badge.title = `${t.name} (${t.type})`;
+        badge.textContent = t.name;
+  
+        // 🔴 Allow deleting task on click
+        badge.addEventListener('click', () => {
+          const confirmed = confirm(`Delete task "${t.name}"?`);
+          if (confirmed) {
+            tasks = tasks.filter(task => !(task.name === t.name && task.dueDate === t.dueDate));
+            renderCalendar(); 
+            renderRestrictionsGrid(); 
+            generateSchedule();
+          }
+  
+        });
+
+  dayCell.appendChild(badge);
+}
+
+
+      calendarGrid.appendChild(dayCell);
+    }
+  }
+
+  prevMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  nextMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  renderCalendar();
+
+  // ========== RESTRICTIONS GRID ==========
+  const weekGrid = document.getElementById('weekGrid');
+  const startHour = 8;
+  const endHour = 22;
+  const weekDays = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function renderRestrictionsGrid() {
+    weekGrid.innerHTML = '';
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'time-label';
+    weekGrid.appendChild(emptyCell);
+
+    for (let day of weekDays) {
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'day-label';
+      dayLabel.textContent = day;
+      weekGrid.appendChild(dayLabel);
+    }
+
+    for (let hour = startHour; hour < endHour; hour++) {
+      const timeLabel = document.createElement('div');
+      timeLabel.className = 'time-label';
+      const ampm = hour >= 12 ? 'pm' : 'am';
+      const displayHour = hour > 12 ? hour - 12 : hour;
+      timeLabel.textContent = `${displayHour} ${ampm}`;
+      weekGrid.appendChild(timeLabel);
+
+      for (let day of weekDays) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        const slotId = `${day}-${hour}`;
+        slot.dataset.slotId = slotId;
+
+        if (noStudySlots.has(slotId)) {
+          slot.classList.add('no-study');
+        }
+
+        slot.addEventListener('click', () => {
+          if (noStudySlots.has(slotId)) {
+            noStudySlots.delete(slotId);
+            slot.classList.remove('no-study');
+          } else {
+            noStudySlots.add(slotId);
+            slot.classList.add('no-study');
+          }
+        });
+
+        weekGrid.appendChild(slot);
+      }
+    }
+  }
+  function updateScheduleWeekDates() {
+  const dateLabels = {
+    Sun: document.getElementById('date-Sun'),
+    Mon: document.getElementById('date-Mon'),
+    Tue: document.getElementById('date-Tue'),
+    Wed: document.getElementById('date-Wed'),
+    Thu: document.getElementById('date-Thu'),
+    Fri: document.getElementById('date-Fri'),
+    Sat: document.getElementById('date-Sat'),
+  };
+
+  const today = new Date();
+  let todayDay = today.getDay(); // 0 (Sun) to 6 (Sat)
+  // Convert Sunday 0 to 7 for easier calculations (Mon=1,...,Sun=7)
+  todayDay = todayDay === 0 ? 7 : todayDay;
+
+  // Array of weekdays in order Mon to Sun for your keys:
+  const weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  weekOrder.forEach((dayAbbr) => {
+    const label = dateLabels[dayAbbr];
+    let dayIndex = weekOrder.indexOf(dayAbbr) + 1; // Mon=1 ... Sun=7
+
+    const date = new Date(today);
+
+    if (dayIndex < todayDay) {
+      // This day already passed this week, move to next week (+7 days)
+      const diff = 7 - (todayDay - dayIndex);
+      date.setDate(today.getDate() + diff);
+    } else {
+      // This day is today or upcoming this week
+      const diff = dayIndex - todayDay;
+      date.setDate(today.getDate() + diff);
+    }
+
+    // Format date as MM/DD or just day number
+    const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
+    label.textContent = formattedDate;
+  });
+}
+
+
+
+  renderRestrictionsGrid();
+
+  // ========== GENERATED STUDY SCHEDULE ==========
+  const scheduleList = document.getElementById('scheduleList');
+
+function generateSchedule() {
+      updateScheduleWeekDates();
+    const scheduleBody = document.getElementById("scheduleBody");
+    scheduleBody.innerHTML = "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // normalize to midnight
+    const reservedSlots = new Set();
+
+    const weeklySchedule = {
+        "Sunday": {}, "Monday": {}, "Tuesday": {}, "Wednesday": {},
+        "Thursday": {}, "Friday": {}, "Saturday": {}
+    };
+    
+
+
+    let taskInfos = [];
+
+    tasks.forEach(task => {
+        const dueDate = new Date(task.dueDate);
+        let daysToDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+        if (daysToDue < 1) daysToDue = 1;
+
+        const totalHours = task.dedicatedTime;
+        let blocksPerDay = Math.ceil((totalHours / daysToDue));
+        const MAX_BLOCKS_PER_DAY = 14;
+        if (blocksPerDay > MAX_BLOCKS_PER_DAY) blocksPerDay = MAX_BLOCKS_PER_DAY;
+
+        const requiredDays = Math.ceil(totalHours / blocksPerDay);
+        const earliestStart = new Date(dueDate);
+        earliestStart.setDate(dueDate.getDate() - requiredDays + 1);
+        earliestStart.setHours(0, 0, 0, 0);
+        const start = earliestStart > today ? earliestStart : today;
+
+        const validSlots = [];
+        const studyDates = [];
+        const current = new Date(start);
+
+        while (current <= dueDate) {
+            const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][current.getDay()];
+            studyDates.push(new Date(current));
+            for (let h = startHour; h < endHour; h++) {
+                const slotId = `${dayName.slice(0, 3)}-${h}`;
+                if (!noStudySlots.has(slotId)) {
+                    validSlots.push({ day: dayName, hour: h, slotId, date: new Date(current) });
+                }
+            }
+            current.setDate(current.getDate() + 1);
+        }
+
+        const maxBlocks = blocksPerDay * studyDates.length;
+
+        taskInfos.push({
+            name: task.name,
+            type: task.type,
+            maxPerDay: blocksPerDay,
+            maxBlocks,
+            validSlots,
+            studyDates,
+            assigned: 0,
+            perDayCount: {},
+        });
+    });
+
+    const totalAvailableBlocks = new Set(taskInfos.flatMap(t => t.validSlots.map(s => s.slotId))).size;
+    let totalRequestedBlocks = tasks.reduce((sum, t) => sum + t.dedicatedTime, 0);
+
+   if (totalRequestedBlocks > totalAvailableBlocks) {
+    console.warn("⚠️ Not enough available blocks. Distributing time evenly between tasks.");
+
+    // Distribute time evenly based on task proportions
+    const totalOriginalBlocks = taskInfos.reduce((sum, t) => sum + t.maxBlocks, 0);
+
+    taskInfos.forEach(task => {
+        const proportionalShare = (task.maxBlocks / totalOriginalBlocks) * totalAvailableBlocks;
+        const roundedShare = Math.floor(proportionalShare);
+
+        // Recalculate maxPerDay and maxBlocks for each task
+        task.maxBlocks = roundedShare;
+        task.maxPerDay = Math.ceil(task.maxBlocks / task.studyDates.length);
+    });
+
+    // Optional: Log how it was split
+    taskInfos.forEach(task => {
+        console.log(`📝 ${task.name} reassigned ${task.maxBlocks} blocks, ~${task.maxPerDay} max/day`);
+    });
+}
+
+
+    taskInfos.forEach(task => {
+        const ratio = task.maxBlocks / totalRequestedBlocks;
+        task.targetBlocks = Math.min(task.maxBlocks, Math.floor(ratio * totalAvailableBlocks));
+        task.slotsByDay = {};
+        task.validSlots.forEach(slot => {
+            if (!task.slotsByDay[slot.day]) task.slotsByDay[slot.day] = [];
+            task.slotsByDay[slot.day].push(slot);
+        });
+    });
+
+    taskInfos.forEach(task => {
+        for (const day in task.slotsByDay) {
+            if (task.assigned >= task.targetBlocks) break;
+            let assignedToday = 0;
+
+            for (const slot of task.slotsByDay[day]) {
+                if (reservedSlots.has(slot.slotId)) continue;
+                if (assignedToday >= task.maxPerDay || task.assigned >= task.targetBlocks) break;
+
+                weeklySchedule[day][slot.hour] = task.name;
+                reservedSlots.add(slot.slotId);
+                assignedToday++;
+                task.assigned++;
+            }
+        }
+    });
+
+    let madeProgress = true;
+    while (madeProgress) {
+        madeProgress = false;
+        for (const task of taskInfos) {
+            if (task.assigned >= task.maxBlocks) continue;
+
+            for (const slot of task.validSlots) {
+                if (task.assigned >= task.maxBlocks) break;
+                if (reservedSlots.has(slot.slotId)) continue;
+
+                const day = slot.day;
+                task.perDayCount[day] = task.perDayCount[day] || 0;
+
+                if (task.perDayCount[day] >= task.maxPerDay) continue;
+
+                weeklySchedule[day][slot.hour] = task.name;
+                reservedSlots.add(slot.slotId);
+                task.perDayCount[day]++;
+                task.assigned++;
+                madeProgress = true;
+            }
+        }
+    }
+
+    taskInfos.forEach(task => {
+        if (task.assigned < task.targetBlocks) {
+            console.warn(`⚠️ Task "${task.name}" only got ${task.assigned} / ${task.targetBlocks} blocks`);
+        }
+    });
+
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    for (let h = startHour; h < endHour; h++) {
+        const row = document.createElement("tr");
+        const timeCell = document.createElement("td");
+        const displayHour = h > 12 ? h - 12 : h;
+        const ampm = h >= 12 ? "PM" : "AM";
+        timeCell.textContent = `${displayHour} ${ampm}`;
+        row.appendChild(timeCell);
+
+        days.forEach(day => {
+            const cell = document.createElement("td");
+            cell.textContent = weeklySchedule[day][h] || "";
+            row.appendChild(cell);
+        });
+
+        scheduleBody.appendChild(row);
+    }
+
+    // Ensure the regenerate button keeps working
+    const regenBtn = document.getElementById("regenerateScheduleBtn");
+    regenBtn.removeEventListener("click", generateSchedule);
+    regenBtn.addEventListener("click", generateSchedule);
+}
+
+
+</script>
+
+</body>
+</html> 
+
+
